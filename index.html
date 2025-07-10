@@ -1,16 +1,28 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Firebase Chat</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="chat-container">
+  <!-- Overlay zur User-Auswahl -->
+  <div id="user-selection-overlay">
+    <h2>Bitte Benutzer auswählen</h2>
+    <button data-userid="mohannad" data-username="Mohannad">Mohannad</button>
+    <button data-userid="mariella" data-username="Mariella">Mariella</button>
+  </div>
+
+  <div class="chat-container blur" id="chat-container">
+    <div id="chat-header">
+        <h3 id="chat-partner-name">Chat</h3>
+        <div id="chat-status">Lade Status...</div>
+    </div>      
     <div id="messages"></div>
+    <div id="typing-indicator" style="padding: 0 15px 10px; color: #999; font-style: italic; height: 20px;"></div>
     <form id="chat-form">
-      <input type="text" id="message-input" placeholder="Nachricht eingeben..." required>
+      <input type="text" id="message-input" placeholder="Nachricht eingeben..." required />
       <button type="submit">Senden</button>
     </form>
   </div>
