@@ -62,36 +62,48 @@ const firebaseConfig = {
   }
   
   function startChat() {
-    // 👥 Partner setzen
+    // 👥 Partner festlegen
     partnerId = (userId === "mohannad") ? "mariella" : "mohannad";
     chatPartnerName.textContent = partnerId === "mohannad" ? "Mohannad" : "Mariella";
   
-    // 🔵 Online setzen + Disconnect vorbereiten
-    // Verbindung überwachen
+    const userStatusRef = statusRef.child(userId);
     const connectedRef = firebase.database().ref(".info/connected");
-
+  
+    // ⏱ Live-LastSeen aktualisieren
+    let lastSeenInterval;
+  
     connectedRef.on("value", (snap) => {
-    if (snap.val() === true) {
+      if (snap.val() === true) {
+        // Dynamische Disconnect-Aktion vorbereiten
+        userStatusRef.onDisconnect().update({
+          online: false
+        });
+  
         // Benutzer ist online
-        const userStatusRef = statusRef.child(userId);
-
-        // Auf Disconnect vorbereiten
-        userStatusRef.onDisconnect().set({
-        online: false,
-        lastSeen: Date.now(),
-        username: username
+        userStatusRef.update({
+          online: true,
+          username: username
         });
-
-        // Online setzen
-        userStatusRef.set({
-        online: true,
-        lastSeen: Date.now(),
-        username: username
-        });
-    }
+  
+        // ⏱ Alle 15 Sekunden aktuellen Zeitstempel als lastSeen speichern
+        lastSeenInterval = setInterval(() => {
+          userStatusRef.update({
+            lastSeen: Date.now()
+          });
+        }, 15000); // 15 Sekunden
+      }
     });
   
-    // 🔁 Online-Status vom Partner anzeigen
+    // ❌ Beim Verlassen der Seite aufräumen
+    window.addEventListener("beforeunload", () => {
+      clearInterval(lastSeenInterval);
+      userStatusRef.update({
+        online: false,
+        lastSeen: Date.now()
+      });
+    });
+  
+    // 🔁 Online-Status des Partners anzeigen
     statusRef.child(partnerId).on("value", snapshot => {
       const data = snapshot.val();
       if (data?.online) {
@@ -120,7 +132,7 @@ const firebaseConfig = {
       }
     });
   
-    // ✍️ Tippanzeige
+    // ✍️ Tippanzeige senden
     input.addEventListener("input", () => {
       typingRef.child(userId).set(true);
       clearTimeout(typingTimeout);
@@ -129,7 +141,7 @@ const firebaseConfig = {
       }, 2000);
     });
   
-    // 📥 Nachrichten anzeigen
+    // 📥 Nachrichten empfangen
     messagesRef.orderByChild("timestamp").on("value", (snapshot) => {
       messagesDiv.innerHTML = "";
       snapshot.forEach((childSnapshot) => {
@@ -139,17 +151,13 @@ const firebaseConfig = {
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
   
-    // 👀 Anzeigen wenn jemand schreibt
+    // 👀 Typing anderer Nutzer anzeigen
     typingRef.on("value", (snapshot) => {
       const typingUsers = snapshot.val() || {};
       const othersTyping = Object.entries(typingUsers).filter(([id, isTyping]) => id !== userId && isTyping);
-      if (othersTyping.length > 0) {
-        typingIndicator.textContent = "Schreibt...";
-      } else {
-        typingIndicator.textContent = "";
-      }
+      typingIndicator.textContent = othersTyping.length > 0 ? "Schreibt..." : "";
     });
-  }
+  }  
   
   // 🖼 Nachrichten rendern
   function renderMessage(msg) {
