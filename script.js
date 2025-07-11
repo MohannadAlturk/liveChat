@@ -170,6 +170,14 @@ const firebaseConfig = {
       msgDiv.classList.add("other");
     }
   
+    // Prüfe Emoji-Anzahl und füge entsprechende Klasse hinzu
+    const emojiCount = isOnlyEmoji(msg.text);
+    if (emojiCount === 1 || emojiCount === 2) {
+      msgDiv.classList.add("big-emoji");
+    } else if (emojiCount === 3) {
+      msgDiv.classList.add("medium-emoji");
+    }
+  
     const textNode = document.createTextNode(msg.text);
     msgDiv.appendChild(textNode);
   
@@ -188,3 +196,26 @@ const firebaseConfig = {
       date.toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' });
   }
   
+  function isOnlyEmoji(text) {
+    // Entfernt Leerzeichen am Anfang und Ende
+    const trimmed = text.trim();
+    
+    // Emoji Regex (erfasst die meisten Emojis inkl. Kombinationen)
+    const emojiRegex = /\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?/gu;
+    
+    // Alle Emojis im Text finden
+    const emojis = trimmed.match(emojiRegex);
+    
+    // Prüfen ob der Text nur aus Emojis besteht
+    if (!emojis) return false;
+    
+    // Alle Emojis zusammenfügen und mit dem ursprünglichen Text vergleichen
+    const onlyEmojis = emojis.join('');
+    
+    // Prüfen ob der Text nur aus Emojis besteht UND maximal 3 Emojis enthält
+    if (onlyEmojis === trimmed && emojis.length <= 3) {
+      return emojis.length; // Rückgabe der Anzahl für unterschiedliche Größen
+    }
+    
+    return false;
+  }
